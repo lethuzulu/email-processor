@@ -10,7 +10,7 @@ pub struct EmailSignature {
     pub phone: Option<String>,
     pub company: Option<String>,
     pub title: Option<String>,
-    pub template_id: Uiid,
+    pub template_id: Uuid,
     pub created_at: DateTime<Utc>
 }
 
