@@ -1,8 +1,8 @@
-use uuid::Uuid;
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct EmailSignature {
     pub id: Uuid,
     pub name: String,
@@ -11,44 +11,39 @@ pub struct EmailSignature {
     pub company: Option<String>,
     pub title: Option<String>,
     pub template_id: Uuid,
-    pub created_at: DateTime<Utc>
+    pub created_at: DateTime<Utc>,
 }
 
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ValidationResult {
     pub signature_id: Uuid,
     pub valid: bool,
     pub errors: Vec<ValidationError>,
     pub warnings: Vec<String>,
-    pub validated_at: DateTime<Utc>
+    pub validated_at: DateTime<Utc>,
 }
 
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ValidationError {
     pub field: String,
     pub message: String,
-    pub code: ErrorCode
+    pub code: ErrorCode,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum ErrorCode {
     Required,
     InvalidFormat,
     TooLong,
-    TooShort
+    TooShort,
 }
 
 impl EmailSignature {
-
     // create a builder for testing
     pub fn builder() -> EmailSignatureBuilder {
         EmailSignatureBuilder::default()
     }
 }
-
-
 
 // builder pattern. will be used for test data creation
 #[derive(Default)]
@@ -95,7 +90,7 @@ impl EmailSignatureBuilder {
     pub fn build(self) -> EmailSignature {
         EmailSignature {
             id: Uuid::new_v4(),
-            name: self.name.unwrap_or_else(|| "John Doe".to_string()), 
+            name: self.name.unwrap_or_else(|| "John Doe".to_string()),
             email: self.email.unwrap_or_else(|| "john@example.com".to_string()),
             phone: self.phone,
             company: self.company,

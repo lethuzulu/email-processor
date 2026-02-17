@@ -1,15 +1,13 @@
 use crate::domain::{EmailSignature, ErrorCode, ValidationError, ValidationResult};
+use chrono::Utc;
 use once_cell::sync::Lazy;
 use rayon::iter::IntoParallelRefIterator;
-use regex::Regex;
-use chrono::Utc;
 use rayon::prelude::*;
-
+use regex::Regex;
 
 // compile regex once
-static EMAIL_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap()
-});
+static EMAIL_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap());
 
 pub struct SignatureValidator;
 
@@ -26,7 +24,7 @@ impl SignatureValidator {
             errors.push(ValidationError {
                 field: "name".to_string(),
                 message: "Name is required".to_string(),
-                code: ErrorCode::Required
+                code: ErrorCode::Required,
             })
         }
 
@@ -49,22 +47,24 @@ impl SignatureValidator {
 
         // TODO: add phone validation & other field validation
 
-        ValidationResult { signature_id: sig.id, valid: errors.is_empty(), errors, warnings: vec![], validated_at: Utc::now() }
+        ValidationResult {
+            signature_id: sig.id,
+            valid: errors.is_empty(),
+            errors,
+            warnings: vec![],
+            validated_at: Utc::now(),
+        }
     }
 
     pub fn validate_batch(&self, sigs: &[EmailSignature]) -> Vec<ValidationResult> {
-        sigs.par_iter()
-        .map(|sig|self.validate(sig))
-        .collect()
+        sigs.par_iter().map(|sig| self.validate(sig)).collect()
     }
-
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_valid_signature() {
         let validator = SignatureValidator::new();
@@ -72,19 +72,17 @@ mod tests {
             .name("John Doe")
             .email("john@example.com")
             .build();
-        
+
         let result = validator.validate(&sig);
         assert!(result.valid);
         assert!(result.errors.is_empty());
     }
-    
+
     #[test]
     fn test_invalid_email() {
         let validator = SignatureValidator::new();
-        let sig = EmailSignature::builder()
-            .email("invalid-email")
-            .build();
-        
+        let sig = EmailSignature::builder().email("invalid-email").build();
+
         let result = validator.validate(&sig);
         assert!(!result.valid);
         assert!(!result.errors.is_empty());

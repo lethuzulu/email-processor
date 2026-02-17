@@ -1,5 +1,6 @@
+pub mod api;
 pub mod domain;
-pub mod infrastructure;
 pub mod error;
+pub mod infrastructure;
 
 pub use error::AppError;
