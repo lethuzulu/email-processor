@@ -28,8 +28,8 @@ pub async fn validate_signature(
         "Validating signature"
     );
 
-    // Validate the signature
-    let result = state.validator.validate(&signature);
+    // Validate the signature via pipeline
+    let result = state.pipeline.process_single(signature.into_inner()).await;
 
     let duration = start.elapsed();
     info!(
@@ -60,8 +60,8 @@ pub async fn validate_batch(
 
     info!(batch_size = batch_size, "Processing batch validation");
 
-    // use parallel validation with rayon
-    let results = state.validator.validate_batch(&request.signatures);
+    // use pipeline for batch validation
+    let results = state.pipeline.process_batch(request.into_inner().signatures).await;
 
     // calculate summary
     let valid_count = results.iter().filter(|r| r.valid).count();
@@ -158,7 +158,7 @@ mod tests {
     #[actix_web::test]
     async fn test_validate_batch() {
         let state = create_test_state();
-        let request = BatchValidateRequest {
+        let request = BatchValidateResult {
             signatures: vec![
                 EmailSignature::builder().email("valid@example.com").build(),
                 EmailSignature::builder().email("invalid").build(),

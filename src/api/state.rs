@@ -1,18 +1,18 @@
-use crate::{domain::SignatureValidator, infrastructure::Config};
+use crate::{infrastructure::Config, pipeline::PipelineManager};
 use std::sync::Arc;
 
 // shared app state
 // cloned for each "worker", but Arc makes it cheap because of reference counting
 #[derive(Clone)]
 pub struct AppState {
-    pub validator: Arc<SignatureValidator>,
+    pub pipeline: Arc<PipelineManager>,
     pub config: Arc<Config>,
 }
 
 impl AppState {
     pub fn new(config: Config) -> Self {
         Self {
-            validator: Arc::new(SignatureValidator::new()),
+            pipeline: Arc::new(PipelineManager::new()),
             config: Arc::new(config),
         }
     }
