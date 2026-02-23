@@ -1,12 +1,13 @@
 use actix_web::{App, HttpServer, middleware, web};
 use email_processor::{
     api::{AppState, routes},
-    infrastructure::{Config, logging},
+    infrastructure::{logging, metrics, Config},
 };
+use std::net::SocketAddr;
 use tracing::info;
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
+async fn main() -> anyhow::Result<()> {
     // load environment variables
     dotenv::dotenv().ok();
 
@@ -25,10 +26,15 @@ async fn main() -> std::io::Result<()> {
         "Server configuration"
     );
 
+    // initialize metrics on separate port
+    let metrics_addr: SocketAddr = "0.0.0.0:9090".parse()?;
+    metrics::init_metrics(metrics_addr).map_err(|e| anyhow::anyhow!("{}", e))?;
+    info!("Metrics server started on {}", metrics_addr);
+
     // create shared application state
     let app_state = AppState::new(config.clone());
 
-    // Build server
+    // build server
     let bind_addr = format!("{}:{}", config.server.host, config.server.port);
     info!(bind_addr = %bind_addr, "Binding server");
 
@@ -44,5 +50,7 @@ async fn main() -> std::io::Result<()> {
     .workers(config.server.workers)
     .bind(&bind_addr)?
     .run()
-    .await
+    .await?;
+
+    Ok(())
 }

@@ -28,7 +28,7 @@ pub async fn validate_signature(
         "Validating signature"
     );
 
-    // Validate the signature via pipeline
+    // validate the signature via pipeline
     let result = state.pipeline.process_single(signature.into_inner()).await;
 
     let duration = start.elapsed();
@@ -38,6 +38,8 @@ pub async fn validate_signature(
         duration_ms = duration.as_millis(),
         "Validation complete"
     );
+
+    crate::infrastructure::metrics::record_validation(result.valid);
 
     Ok(HttpResponse::Ok().json(result))
 }
@@ -75,6 +77,10 @@ pub async fn validate_batch(
         duration_ms = duration.as_millis(),
         "Batch validation complete"
     );
+
+    for result in &results {
+        crate::infrastructure::metrics::record_validation(result.valid);
+    }
 
     let response = BatchValidateResponse {
         results,
